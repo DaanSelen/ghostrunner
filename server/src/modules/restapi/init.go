@@ -1,46 +1,61 @@
 package restapi
 
 import (
-	"crypto/tls"
 	"encoding/json"
-	"log"
+	"ghostrunner-server/modules/confread"
+	"ghostrunner-server/modules/utilities"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 )
 
 const (
-	defaultMessage = "GhostRunner Server, HTTP REST API. Version: 0.0.1."
+	defaultMessage   = "GhostRunner Server, HTTP REST API. Version: 0.0.1."
+	readWriteTimeout = 30 * time.Second //Seconds
 )
 
-func rootEndpointHandler(w http.ResponseWriter, r *http.Request) {
+func rootEndpointHandler(w http.ResponseWriter, r *http.Request) { // This endpoint handles has been placed in the init section because its basic.
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	log.Println("ROOT HIT") //Comment out later, for debugging purposes
+	utilities.ConsoleLog("ROOT HIT") //Comment out later, for debugging purposes
 	json.NewEncoder(w).Encode(infoResponse{
 		Status:  http.StatusOK,
 		Message: defaultMessage,
 	})
 }
 
-func _initApiServer(secureServer bool, apiKey, apiCert, apiPort string) {
-	apiRouter := mux.NewRouter().StrictSlash(true) // Initialize the HTTP REST API Router.
+func InitApiServer(cfg confread.ConfigStruct) {
+	rtr := createRouter()
+	srv := createServer(cfg, rtr)
 
-	apiRouter.HandleFunc("/", rootEndpointHandler).Methods("GET")
-
-	if secureServer { // If a secured server is wanted. Use the specified certificate files.
-		httpServer := &http.Server{
-			Addr:    apiPort,   // Specify the desired HTTPS port.
-			Handler: apiRouter, // Specify the above created handler.
-			TLSConfig: &tls.Config{
-				Certificates: []tls.Certificate{ // Load the certificate and private key.
-					loadTLSCertificate(apiCert, apiKey),
-				},
-			},
+	go func() {
+		var err error
+		if cfg.Secure {
+			err = srv.ListenAndServeTLS(cfg.CertFile, cfg.KeyFile)
+		} else {
+			err = srv.ListenAndServe()
 		}
-		go httpServer.ListenAndServeTLS("", "")
-	} else {
-		go http.ListenAndServe(":"+apiPort, apiRouter) // Transform string slightly to make the expected format.
+		utilities.HandleError(err, "Initializing the HTTP REST API!")
+	}()
+	utilities.ConsoleLog("Successfully started the GhostServer goroutine.")
+}
+
+func createRouter() *mux.Router {
+	r := mux.NewRouter().StrictSlash(true)
+
+	r.HandleFunc("/", rootEndpointHandler).Methods("GET")
+	r.HandleFunc("/schedule/{action:register|deregister}", handleSchedule).Methods("POST")
+
+	return r
+}
+
+func createServer(cfg confread.ConfigStruct, ghostHandler http.Handler) *http.Server {
+	return &http.Server{
+		Addr:         cfg.Address,  // Specify the desired HTTPS port.
+		Handler:      ghostHandler, // Specify the above created handler.
+		ReadTimeout:  readWriteTimeout,
+		WriteTimeout: readWriteTimeout,
 	}
 }
