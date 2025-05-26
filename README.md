@@ -7,3 +7,25 @@ The way to accomplish this is to create a tracked task list, and keep track of i
 
 Go(lang) backend server which exposes an HTTP API which can be used to add tasks to the process.<br>
 Python executor/runner which actually executes the commands, Python was chosen because of the availability of: [LibMeshCtrl Python Library](https://pypi.org/project/libmeshctrl/).<br>
+
+# JSON Templates:
+
+TokenBody:
+```json
+{
+	"tokenname": "NewUsableToken",
+	"authtoken": "admintokengoeshereofcourse",
+	"selectedtoken": "thetokenyouwanttoremove"
+}
+```
+TaskBody:
+```json
+{
+  "name": "DeployTask",
+  "authtoken": "abc123securetoken",
+  "data": {
+    "command": "deploy-app",
+    "nodeids": "node1,node2,node3"
+  }
+}
+```

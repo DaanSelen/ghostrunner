@@ -1,0 +1,11 @@
+[ghostserver]
+address =
+
+admin_token =
+token_key_file =
+
+secure =
+api_cert_file =
+api_key_file =
+
+interval =
