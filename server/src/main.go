@@ -31,7 +31,15 @@ func main() {
 	log.Println(utilities.InfoTag, "Letting TimeKeeper take over...")
 	log.Println(utilities.InfoTag, fmt.Sprintf("Interval set at: %d seconds.", cfg.Interval))
 
-	wrapper.PyListOnline(cfg.PyVenvName)
+	onDevices, err := wrapper.PyListOnline(cfg.PyVenvName)
+	if err != nil {
+		log.Println(utilities.ErrTag, err)
+	}
+
+	for index, device := range onDevices.OnlineDevices {
+		log.Println(index, device)
+	}
+	log.Println(len(onDevices.OnlineDevices))
 
 	timekeeper.KeepTime(cfg.Interval)
 }

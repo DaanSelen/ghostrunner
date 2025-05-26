@@ -4,28 +4,28 @@ import (
 	"encoding/json"
 	"fmt"
 	"ghostrunner-server/modules/utilities"
-	"log"
 	"os"
 	"os/exec"
 )
 
-func PyListOnline(venvName string) {
-	pythonBin := fmt.Sprintf("./../runner/%s/bin/python", venvName)
-	cmd := exec.Command(pythonBin, "./../runner/runner.py", "-lo")
+const (
+	pyFile = "./../runner/runner.py"
+)
 
-	data, err := cmd.CombinedOutput()
+func PyListOnline(venvName string) (utilities.PyOnlineDevices, error) {
+	pyBin := fmt.Sprintf("./../runner/%s/bin/python", venvName)
+	cmd := exec.Command(pyBin, pyFile, "-lo")
+
+	rawData, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Println(utilities.ErrTag, err, data)
 		cwd, _ := os.Getwd()
-		log.Println("Working directory:", cwd)
-		return
+		return utilities.PyOnlineDevices{}, fmt.Errorf("python execution failed, working directory: %s", cwd)
 	}
 
-	var status utilities.PyOnlineDevices
-	if err := json.Unmarshal(data, &status); err != nil {
-		fmt.Println("Error unmarshaling:", err)
-		return
+	var data utilities.PyOnlineDevices
+	if err := json.Unmarshal(rawData, &data); err != nil {
+		return utilities.PyOnlineDevices{}, fmt.Errorf("error unmarshaling: %v", err)
 	}
 
-	fmt.Printf("Parsed Struct: %+v\n", status)
+	return data, nil
 }
