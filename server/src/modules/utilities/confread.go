@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	configSection = "ghostserver"
+	serverSection = "ghostserver"
+	runnerSection = "ghostrunner"
 )
 
 func ReadConf(configPath string) ConfigStruct {
@@ -16,7 +17,7 @@ func ReadConf(configPath string) ConfigStruct {
 		log.Println(ErrTag, err)
 	}
 
-	section := inidata.Section(configSection)
+	section := inidata.Section(serverSection)
 
 	var config ConfigStruct
 
@@ -42,6 +43,14 @@ func ReadConf(configPath string) ConfigStruct {
 	if err != nil {
 		log.Println(ErrTag, err)
 	}
+
+	section = inidata.Section(runnerSection)
+
+	config.MeshHostname = section.Key("hostname").String()
+	config.MeshUsername = section.Key("username").String()
+	config.MeshPassword = section.Key("password").String()
+
+	config.PyVenvName = section.Key("python_venv_name").String()
 
 	return config
 }

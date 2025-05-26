@@ -49,7 +49,7 @@ func InitApiServer(cfg utilities.ConfigStruct, hmacKey []byte) {
 		}
 		defer srv.Close()
 	}()
-	//utilities.ConsoleLog("Successfully started the GhostServer goroutine.")
+	log.Println(utilities.InfoTag, "Successfully started the GhostServer goroutine at:", cfg.Address)
 }
 
 func createRouter(hmacKey []byte) *mux.Router {
@@ -59,6 +59,7 @@ func createRouter(hmacKey []byte) *mux.Router {
 
 	r.HandleFunc("/token/create", createTokenHandler(hmacKey)).Methods("POST")
 	r.HandleFunc("/token/delete", deleteTokenHandler(hmacKey)).Methods("DELETE")
+	r.HandleFunc("/token/list", listTokenHandler(hmacKey)).Methods("GET")
 
 	r.HandleFunc("/task/create", createTaskHandler(hmacKey)).Methods("POST")
 	r.HandleFunc("/task/delete", deleteTaskHandler(hmacKey)).Methods("DELETE")

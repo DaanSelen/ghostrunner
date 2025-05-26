@@ -3,11 +3,12 @@ package database
 type Statements struct {
 	SetupDatabase string
 
-	AdminTokenCreate string
-	GetTokenID       string
-	CreateToken      string
-	DeleteToken      string
-	RetrieveTokens   string
+	AdminTokenCreate   string
+	GetTokenID         string
+	CreateToken        string
+	DeleteToken        string
+	RetrieveTokens     string
+	RetrieveTokenNames string
 
 	CreateTask   string
 	DeleteTask   string
@@ -44,6 +45,8 @@ var declStat = Statements{
 		name = ?;`,
 	RetrieveTokens: `
 	SELECT token FROM tokens`,
+	RetrieveTokenNames: `
+	SELECT name FROM tokens`,
 
 	CreateTask: `
 	INSERT INTO tasks (name, command, nodeids, creation, status)

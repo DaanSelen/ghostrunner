@@ -8,6 +8,11 @@ type ConfigStruct struct {
 	ApiCertFile  string
 	ApiKeyFile   string
 	Interval     int
+
+	MeshHostname string
+	MeshUsername string
+	MeshPassword string
+	PyVenvName   string
 }
 
 type InfoResponse struct {
@@ -40,4 +45,16 @@ type TaskData struct {
 type TaskBody struct {
 	AuthToken string   `json:"authtoken"`
 	Details   TaskData `json:"details"`
+}
+
+// Python wrapper objects.
+
+type Device struct {
+	Name   string `json:"name"`
+	NodeID string `json:"nodeid"`
+}
+
+type PyOnlineDevices struct {
+	OnlineDevices []Device `json:"online_devices"`
+	TotalDevices  int      `json:"total_devices"`
 }

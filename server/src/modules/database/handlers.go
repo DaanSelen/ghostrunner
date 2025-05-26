@@ -8,10 +8,12 @@ import (
 	"ghostrunner-server/modules/encrypt"
 	"ghostrunner-server/modules/utilities"
 	"log"
+	"strings"
 )
 
 func insertAdminToken(token string, hmacKey []byte) error {
 	var adminTokenName string = "Self-Generated Admin Token"
+	adminTokenName = strings.ToLower(adminTokenName)
 	hashedToken := encrypt.CreateHMAC(token, hmacKey)
 
 	_, err := db.Exec(declStat.AdminTokenCreate, adminTokenName, hashedToken)
@@ -67,6 +69,26 @@ func RetrieveTokens() []string {
 		tokens = append(tokens, singleToken)
 	}
 	return tokens
+}
+
+func RetrieveTokenNames() []string {
+	rows, err := db.Query(declStat.RetrieveTokenNames)
+	if err != nil {
+		log.Println(utilities.ErrTag, err)
+	}
+	defer rows.Close()
+
+	var tokenNames []string
+	for rows.Next() {
+		var singleTokenName string
+		err = rows.Scan(&singleTokenName)
+		if err != nil {
+			log.Println(utilities.ErrTag, err)
+		}
+
+		tokenNames = append(tokenNames, singleTokenName)
+	}
+	return tokenNames
 }
 
 func InsertTask(name, command string, nodeids []string, date, status string) error {

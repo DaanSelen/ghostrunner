@@ -7,6 +7,7 @@ import (
 	"ghostrunner-server/modules/utilities"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"slices"
@@ -114,9 +115,42 @@ func deleteTokenHandler(hmacKey []byte) http.HandlerFunc {
 	}
 }
 
+func listTokenHandler(hmacKey []byte) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			http.Error(w, "Missing Authorization header", http.StatusUnauthorized)
+			return
+		}
+
+		const prefix = "Bearer "
+		if len(authHeader) <= len(prefix) || authHeader[:len(prefix)] != prefix {
+			http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
+			return
+		}
+
+		tokenCandidate := authHeader[len(prefix):]
+		securedCandidate := encrypt.CreateHMAC(tokenCandidate, hmacKey)
+		if !generalAuth(w, securedCandidate) {
+			return
+		}
+
+		data := database.RetrieveTokenNames()
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(utilities.InfoResponse{
+			Status:  http.StatusOK,
+			Message: "Succesfully Retrieved Tokens",
+			Data:    data,
+		})
+	}
+}
+
 func createToken(tokenName string, hmacKey []byte) (string, error) {
 	randomString := utilities.GenRandString(64)
 	securedString := encrypt.CreateHMAC(randomString, hmacKey)
+	tokenName = strings.ToLower(tokenName)
 
 	if err := database.InsertToken(tokenName, securedString); err != nil {
 		return "", err
@@ -124,9 +158,8 @@ func createToken(tokenName string, hmacKey []byte) (string, error) {
 	return randomString, nil
 }
 
-func deleteToken(candToken string, hmacKey []byte) error {
-	securedToken := encrypt.CreateHMAC(candToken, hmacKey)
-	return database.RemoveToken(securedToken)
+func deleteToken(tokenName string, hmacKey []byte) error {
+	return database.RemoveToken(tokenName)
 }
 
 /*
@@ -212,6 +245,7 @@ func listTasksHandler(hmacKey []byte) http.HandlerFunc {
 func createTask(taskName, command string, nodeids []string) error {
 	creationDate := time.Now().Format("02-01-2006 15:04:05")
 	creationStatus := constCreationStatus
+	taskName = strings.ToLower(taskName)
 
 	return database.InsertTask(taskName, command, nodeids, creationDate, creationStatus)
 }

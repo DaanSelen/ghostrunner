@@ -1,0 +1,18 @@
+[ghostserver]
+address =
+
+admin_token =
+token_key_file =
+
+secure =
+api_cert_file =
+api_key_file =
+
+interval =
+
+[ghostrunner]
+hostname =
+username =
+password =
+
+python_venv_name = venv

@@ -7,6 +7,7 @@ import (
 	"ghostrunner-server/modules/restapi"
 	"ghostrunner-server/modules/timekeeper"
 	"ghostrunner-server/modules/utilities"
+	"ghostrunner-server/modules/wrapper"
 	"log"
 )
 
@@ -29,5 +30,8 @@ func main() {
 	log.Println(utilities.InfoTag, "Components should have started.")
 	log.Println(utilities.InfoTag, "Letting TimeKeeper take over...")
 	log.Println(utilities.InfoTag, fmt.Sprintf("Interval set at: %d seconds.", cfg.Interval))
+
+	wrapper.PyListOnline(cfg.PyVenvName)
+
 	timekeeper.KeepTime(cfg.Interval)
 }
