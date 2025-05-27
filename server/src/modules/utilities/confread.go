@@ -46,6 +46,7 @@ func ReadConf(configPath string) ConfigStruct {
 
 	section = inidata.Section(runnerSection)
 
+	// MeshCentral
 	config.MeshHostname = section.Key("hostname").String()
 	config.MeshUsername = section.Key("username").String()
 	config.MeshPassword = section.Key("password").String()

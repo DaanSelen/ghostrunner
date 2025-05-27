@@ -3,6 +3,10 @@ from json import dumps
 
 class connect:
     @staticmethod
+    async def quit(session: meshctrl.Session) -> None: # Function to use when quitting, but gracefully.
+        await session.close()
+
+    @staticmethod
     async def connect(hostname: str, username: str, password: str) -> meshctrl.Session:
         session = meshctrl.Session(
             hostname,
@@ -13,8 +17,21 @@ class connect:
         return session
     
     @staticmethod
-    async def list_online(session: meshctrl.Session,
-                          mode: str = "online") -> dict: # Default is return online devices, but function can also return the offline devices if specified.
+    async def run(session: meshctrl.Session, command: str, nodeids: list[str]) -> None:
+        try:
+            response = await session.run_command(nodeids=nodeids,
+                                                 command=command,
+                                                 ignore_output=False,
+                                                 timeout=900)
+        except Exception as error:
+            print("Run Command failed.", error)
+            return
+
+        for device in response:
+            print(dumps(response[device]["result"]))
+
+    @staticmethod
+    async def list_online(session: meshctrl.Session) -> dict: # Default is return online devices, but function can also return the offline devices if specified.
 
         raw_device_list = await session.list_devices()
 
