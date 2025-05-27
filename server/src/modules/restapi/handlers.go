@@ -13,9 +13,10 @@ import (
 	"slices"
 )
 
-const (
-	constCreationStatus string = "Created"
-)
+type authPayload interface {
+	GetAuthToken() string
+	GetName() string
+}
 
 func generalAuth(w http.ResponseWriter, securedCandidate string) bool {
 	tokens := database.RetrieveTokens()
@@ -27,55 +28,36 @@ func generalAuth(w http.ResponseWriter, securedCandidate string) bool {
 	return true
 }
 
-func parseTokenAndAuth(w http.ResponseWriter, r *http.Request, hmacKey []byte) (utilities.TokenCreateBody, bool) {
-	var data utilities.TokenCreateBody
+func parseAndAuth[T authPayload](w http.ResponseWriter, r *http.Request, hmacKey []byte) (T, bool) {
+	var data T
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		log.Println(utilities.ErrTag, "Decode error:", err)
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return data, false
 	}
 
-	if data.AuthToken == "" || data.Details.Name == "" {
+	if data.GetAuthToken() == "" || data.GetName() == "" {
 		log.Println("[ERROR] Missing required fields")
 		http.Error(w, "Missing required fields", http.StatusBadRequest)
 		return data, false
 	}
 
-	givenToken := data.AuthToken
-	securedCandidate := encrypt.CreateHMAC(givenToken, hmacKey)
-	return data, generalAuth(w, securedCandidate)
-}
-
-func parseTaskAndAuth(w http.ResponseWriter, r *http.Request, hmacKey []byte) (utilities.TaskBody, bool) {
-	var data utilities.TaskBody
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		log.Println(utilities.ErrTag, "Decode error:", err)
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return data, false
-	}
-
-	if data.AuthToken == "" || data.Details.Name == "" {
-		log.Println("[ERROR] Missing required fields")
-		http.Error(w, "Missing required fields", http.StatusBadRequest)
-		return data, false
-	}
-
-	givenToken := data.AuthToken
-	securedCandidate := encrypt.CreateHMAC(givenToken, hmacKey)
+	securedCandidate := encrypt.CreateHMAC(data.GetAuthToken(), hmacKey)
 	return data, generalAuth(w, securedCandidate)
 }
 
 /*
-The following section portrains to Token creation and deletion.
+The following section pertrains to Token creation and deletion.
 */
 
 func createTokenHandler(hmacKey []byte) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data, ok := parseTokenAndAuth(w, r, hmacKey)
+		data, ok := parseAndAuth[utilities.TokenCreateBody](w, r, hmacKey)
 		if !ok {
 			return
 		}
 
+		data.Details.Name = strings.ToLower(data.Details.Name) //Transform to lower
 		token, err := createToken(data.Details.Name, hmacKey)
 		if err != nil {
 			log.Println(utilities.ErrTag, "createToken failed:", err)
@@ -87,7 +69,7 @@ func createTokenHandler(hmacKey []byte) http.HandlerFunc {
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(utilities.InfoResponse{
 			Status:  http.StatusCreated,
-			Message: "Token Succesfully Created.",
+			Message: "Token Successfully Created.",
 			Data:    token,
 		})
 	}
@@ -95,7 +77,7 @@ func createTokenHandler(hmacKey []byte) http.HandlerFunc {
 
 func deleteTokenHandler(hmacKey []byte) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data, ok := parseTokenAndAuth(w, r, hmacKey)
+		data, ok := parseAndAuth[utilities.TokenCreateBody](w, r, hmacKey)
 		if !ok {
 			return
 		}
@@ -141,7 +123,7 @@ func listTokenHandler(hmacKey []byte) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(utilities.InfoResponse{
 			Status:  http.StatusOK,
-			Message: "Succesfully Retrieved Tokens",
+			Message: "Successfully Retrieved Tokens",
 			Data:    data,
 		})
 	}
@@ -168,11 +150,12 @@ The following section portrains to Task creation and deletion.
 
 func createTaskHandler(hmacKey []byte) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data, ok := parseTaskAndAuth(w, r, hmacKey)
+		data, ok := parseAndAuth[utilities.TaskCreateBody](w, r, hmacKey)
 		if !ok {
 			return
 		}
 
+		data.Details.Name = strings.ToLower(data.Details.Name) //Transform to lower
 		if err := createTask(data.Details.Name, data.Details.Command, data.Details.Nodeids); err != nil {
 			log.Println(utilities.ErrTag, "createTask failed:", err)
 			http.Error(w, "Task creation failed", http.StatusInternalServerError)
@@ -183,19 +166,20 @@ func createTaskHandler(hmacKey []byte) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(utilities.InfoResponse{
 			Status:  http.StatusOK,
-			Message: "Task '" + data.Details.Name + "' Created Succesfully.",
+			Message: "Task '" + data.Details.Name + "' Created Successfully.",
 		})
 	}
 }
 
 func deleteTaskHandler(hmacKey []byte) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data, ok := parseTaskAndAuth(w, r, hmacKey)
+		data, ok := parseAndAuth[utilities.TaskCreateBody](w, r, hmacKey)
 		if !ok {
 			return
 		}
+		nodeid := data.Details.Nodeids[0]
 
-		if err := deleteTask(data.Details.Name); err != nil {
+		if err := deleteTask(data.Details.Name, nodeid); err != nil {
 			log.Println(utilities.ErrTag, "createTask failed:", err)
 			http.Error(w, "Task deletion failed", http.StatusInternalServerError)
 			return
@@ -205,7 +189,7 @@ func deleteTaskHandler(hmacKey []byte) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(utilities.InfoResponse{
 			Status:  http.StatusOK,
-			Message: "Task '" + data.Details.Name + "' Deleted Succesfully.",
+			Message: "Task '" + data.Details.Name + "' Deleted Successfully.",
 		})
 	}
 }
@@ -236,7 +220,7 @@ func listTasksHandler(hmacKey []byte) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(utilities.InfoResponse{
 			Status:  http.StatusOK,
-			Message: "Succesfully Retrieved Tasks",
+			Message: "Successfully Retrieved Tasks",
 			Data:    data,
 		})
 	}
@@ -250,12 +234,11 @@ func flushTaskListHandler(hmacKey []byte) http.HandlerFunc {
 
 func createTask(taskName, command string, nodeids []string) error {
 	creationDate := time.Now().Format("02-01-2006 15:04:05")
-	creationStatus := constCreationStatus
 	taskName = strings.ToLower(taskName)
 
-	return database.InsertTask(taskName, command, nodeids, creationDate, creationStatus)
+	return database.InsertTask(taskName, command, nodeids, creationDate)
 }
 
-func deleteTask(taskName string) error {
-	return database.RemoveTask(taskName)
+func deleteTask(taskName, nodeid string) error {
+	return database.RemoveTask(taskName, nodeid)
 }

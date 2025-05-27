@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"ghostrunner-server/modules/encrypt"
@@ -91,9 +90,9 @@ func RetrieveTokenNames() []string {
 	return tokenNames
 }
 
-func InsertTask(name, command string, nodeids []string, date, status string) error {
+func InsertTask(name, command string, nodeids []string, date string) error {
 	for _, singleNodeid := range nodeids {
-		_, err := db.Exec(declStat.CreateTask, name, command, string(singleNodeid), date, status)
+		_, err := db.Exec(declStat.CreateTask, name, command, string(singleNodeid), date)
 		if err != nil {
 			return fmt.Errorf("failed to create task: %w", err)
 		}
@@ -101,9 +100,18 @@ func InsertTask(name, command string, nodeids []string, date, status string) err
 	return nil
 }
 
-func RemoveTask(name string) error {
-	_, err := db.Exec(declStat.DeleteTask, name)
+func RemoveTask(name, nodeid string) error {
+	var count int
+	err := db.QueryRow(declStat.CountTasks, name).Scan(&count)
 	if err != nil {
+		return fmt.Errorf("failed to count the task occurence: %w", err)
+	}
+
+	if count == 0 {
+		return fmt.Errorf("task '%s' not found", name)
+	}
+
+	if _, err = db.Exec(declStat.DeleteTask, name, nodeid); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return fmt.Errorf("token not found")
 		}
@@ -113,7 +121,7 @@ func RemoveTask(name string) error {
 	return nil
 }
 
-func RetrieveTasks() []utilities.TaskData {
+func RetrieveTasks() []utilities.InternalQTaskData {
 	rows, err := db.Query(declStat.ListAllTasks)
 	if err != nil {
 		log.Println("Query error:", err)
@@ -121,21 +129,14 @@ func RetrieveTasks() []utilities.TaskData {
 	}
 	defer rows.Close()
 
-	var tasks []utilities.TaskData
+	var tasks []utilities.InternalQTaskData
 
 	for rows.Next() {
-		var task utilities.TaskData
-		var nodeidsStr string
+		var task utilities.InternalQTaskData
 
-		err := rows.Scan(&task.Name, &task.Command, &nodeidsStr, &task.Creation, &task.Status)
+		err := rows.Scan(&task.Name, &task.Command, &task.Nodeid, &task.Creation)
 		if err != nil {
 			log.Println("Row scan error:", err)
-			continue
-		}
-
-		err = json.Unmarshal([]byte(nodeidsStr), &task.Nodeids)
-		if err != nil {
-			log.Println("Unmarshal error:", err)
 			continue
 		}
 

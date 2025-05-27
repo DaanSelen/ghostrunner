@@ -12,20 +12,20 @@ def cmd_flags() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Process command-line arguments")
 
     parser.add_argument("-lo", "--list-online", action='store_true', help="Specify if the program needs to list online devices.")
-    parser.add_argument("-rc", "--run", action='store_true', help="Make the program run a command.")
+    parser.add_argument("--run", action='store_true', help="Make the program run a command.")
     parser.add_argument("--command", type=str, help="Specify the actual command that is going to run.")
-    parser.add_argument('--nodeids', nargs='+', help='List of node IDs')
+    parser.add_argument('--nodeid', nargs='+', help='List of node IDs')
 
     parser.add_argument("-i", "--indent", action='store_true', help="Specify whether the output needs to be indented.")
 
     return parser.parse_args()
 
-async def prepare_command(command: str, nodeids: list[str]) -> list[str]: # Have some checks so it happens correctly.
-    if len(nodeids) < 1 or len(command) < 1:
-        print("No nodeids or command passed... quiting.")
-        return []
+async def prepare_command(command: str, nodeid: str) -> str: # Have some checks so it happens correctly.
+    if len(nodeid) < 1 or len(command) < 1:
+        print("No nodeid or command passed... quiting.")
+        return ""
     
-    return nodeids
+    return nodeid
 
 async def main() -> None:
     args = cmd_flags()
@@ -43,15 +43,15 @@ async def main() -> None:
         return await connect.quit(session) # Exit gracefully. Because python.
 
     if args.run:
-        if not args.command or not args.nodeids:
-            print("When using run, also use --comand and --nodeids")
+        if not args.command or not args.nodeid:
+            print("When using run, also use --command and --nodeid")
             return await connect.quit(session) # Exit gracefully. Because python.
     
         command = args.command
-        nodeids = args.nodeids
-        nodeids = await prepare_command(command, nodeids)
+        nodeid = args.nodeid
+        nodeid = await prepare_command(command, nodeid)
 
-        await connect.run(session, command, nodeids)
+        await connect.run(session, command, nodeid)
 
     await session.close()
 

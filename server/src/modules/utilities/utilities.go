@@ -14,6 +14,12 @@ const (
 	ErrTag  = "[ERROR]"
 )
 
+func (t TokenCreateBody) GetAuthToken() string { return t.AuthToken }
+func (t TokenCreateBody) GetName() string      { return t.Details.Name }
+
+func (t TaskCreateBody) GetAuthToken() string { return t.AuthToken }
+func (t TaskCreateBody) GetName() string      { return t.Details.Name }
+
 func CheckDatabaseRemnants(databaseDir, fullDatabasePath string) {
 	remnantDir := StatPath(databaseDir)
 	if !remnantDir {

@@ -13,6 +13,7 @@ type Statements struct {
 	CreateTask   string
 	DeleteTask   string
 	ListAllTasks string
+	CountTasks   string
 }
 
 var declStat = Statements{
@@ -27,9 +28,15 @@ var declStat = Statements{
 		name TEXT NOT NULL,
 		command TEXT NOT NULL,
 		nodeid TEXT NOT NULL,
-		creation TEXT NOT NULL,
-		status TEXT NOT NULL,
-		result TEXT DEFAULT NULL
+		creation TEXT NOT NULL
+	);
+	CREATE TABLE IF NOT EXISTS completed (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT NOT NULL,
+		command TEXT NOT NULL,
+		nodeid TEXT NOT NULL,
+		completion TEXT NOT NULL,
+		result TEXT NOT NULL
 	);`,
 
 	AdminTokenCreate: `
@@ -50,10 +57,14 @@ var declStat = Statements{
 	SELECT name FROM tokens`,
 
 	CreateTask: `
-	INSERT INTO tasks (name, command, nodeid, creation, status)
-		VALUES (?, ?, ?, ?, ?);`,
+	INSERT INTO tasks (name, command, nodeid, creation)
+		VALUES (?, ?, ?, ?);`,
 	DeleteTask: `
-	DELETE FROM tasks WHERE name = ?;`,
+	DELETE FROM tasks WHERE name = ? AND nodeid = ?;`,
 	ListAllTasks: `
-	Select name, command, nodeid, creation, status from tasks;`,
+	Select name, command, nodeid, creation from tasks;`,
+	CountTasks: `
+	SELECT COUNT(*)
+	FROM tasks
+	WHERE name = ?;`,
 }

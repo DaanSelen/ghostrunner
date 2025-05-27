@@ -34,7 +34,7 @@ type TokenListBody struct {
 	AuthToken string `json:"authtoken"`
 }
 
-type TaskData struct {
+type RequestTaskData struct {
 	Name     string   `json:"name"`
 	Command  string   `json:"command"`
 	Nodeids  []string `json:"nodeids"`
@@ -42,9 +42,24 @@ type TaskData struct {
 	Status   string   `json:"status"`
 }
 
-type TaskBody struct {
-	AuthToken string   `json:"authtoken"`
-	Details   TaskData `json:"details"`
+type InternalQTaskData struct {
+	Name     string `json:"name"`
+	Command  string `json:"command"`
+	Nodeid   string `json:"nodeid"`
+	Creation string `json:"creation"`
+}
+
+type InternalCTaskData struct {
+	Name       string `json:"name"`
+	Command    string `json:"command"`
+	Nodeid     string `json:"nodeid"`
+	Completion string `json:"completion"`
+	Result     string `json:"result"`
+}
+
+type TaskCreateBody struct {
+	AuthToken string          `json:"authtoken"`
+	Details   RequestTaskData `json:"details"`
 }
 
 // Python wrapper objects.

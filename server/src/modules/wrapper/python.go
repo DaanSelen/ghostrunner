@@ -13,13 +13,17 @@ const (
 	pyFile = "./../runner/runner.py"
 )
 
-func PyListOnline(venvName string, pyArgs []string) (utilities.PyOnlineDevices, error) {
+func pyExec(venvName string, pyArgs []string) ([]byte, error) {
 	pyBin := fmt.Sprintf("./../runner/%s/bin/python", venvName)
 	runtimeArgs := append([]string{pyFile}, pyArgs...)
 
 	cmd := exec.Command(pyBin, runtimeArgs...)
 
-	rawData, err := cmd.CombinedOutput()
+	return cmd.CombinedOutput()
+}
+
+func PyListOnline(venvName string, pyArgs []string) (utilities.PyOnlineDevices, error) {
+	rawData, err := pyExec(venvName, pyArgs)
 	if err != nil {
 		cwd, _ := os.Getwd()
 		return utilities.PyOnlineDevices{}, fmt.Errorf("python execution failed, working directory: %s", cwd)
@@ -33,6 +37,12 @@ func PyListOnline(venvName string, pyArgs []string) (utilities.PyOnlineDevices, 
 	return data, nil
 }
 
-func ExecCommand(nodeid, command string) {
-	log.Printf("Triggered %s, on %s", command, nodeid)
+func ExecTask(venvName string, pyArgs []string) {
+	rawData, err := pyExec(venvName, pyArgs)
+	if err != nil {
+		cwd, _ := os.Getwd()
+		log.Println("FAILED,", err, "CWD:", cwd)
+	}
+
+	log.Println(string(rawData))
 }

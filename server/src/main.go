@@ -30,5 +30,5 @@ func main() {
 	log.Println(utilities.InfoTag, "Letting TimeKeeper take over...")
 	log.Println(utilities.InfoTag, fmt.Sprintf("Interval set at: %d seconds.", cfg.Interval))
 
-	timekeeper.KeepTime(cfg.Interval, cfg)
+	timekeeper.KeepTime(cfg.Interval, cfg.PyVenvName)
 }

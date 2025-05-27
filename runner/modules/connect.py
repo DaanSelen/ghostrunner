@@ -17,7 +17,7 @@ class connect:
         return session
     
     @staticmethod
-    async def run(session: meshctrl.Session, command: str, nodeids: list[str]) -> None:
+    async def run(session: meshctrl.Session, command: str, nodeids: str) -> None:
         try:
             response = await session.run_command(nodeids=nodeids,
                                                  command=command,

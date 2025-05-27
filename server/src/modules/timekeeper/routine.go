@@ -1,27 +1,40 @@
 package timekeeper
 
 import (
+	"fmt"
 	"ghostrunner-server/modules/database"
 	"ghostrunner-server/modules/utilities"
+	"ghostrunner-server/modules/wrapper"
 	"log"
+	"strings"
 )
 
-func routine(cfg utilities.ConfigStruct, pyListArgs []string) {
-	d := listDevices(cfg, pyListArgs) // Retrieve the Online devices.
+func routine(venvName string, pyListArgs []string) {
+	d := listDevices(venvName, pyListArgs) // Retrieve the Online devices.
 	curTasks := database.RetrieveTasks()
 
 	for index, task := range curTasks {
-		relevantNodeids := task.Nodeids
+		relevantNodeid := task.Nodeid
 
 		log.Printf("Processing Task %d", index)
-		for _, nodeid := range relevantNodeids {
-			if isNodeOnline(nodeid, d.OnlineDevices) {
-				//result := wrapper.ExecCommand(nodeid, task.Command)
-				log.Printf("Node online: %s", nodeid)
-			}
+		if isNodeOnline(relevantNodeid, d.OnlineDevices) {
+			log.Printf("Node online: %s", relevantNodeid)
+			forgeAndExec(venvName, relevantNodeid, task.Command)
+			database.RemoveTask(task.Name, task.Nodeid)
+		} else {
+			log.Printf("Node offline %s", relevantNodeid)
 		}
 	}
 
+}
+
+func listDevices(venvName string, pyArgs []string) utilities.PyOnlineDevices {
+	onDevices, err := wrapper.PyListOnline(venvName, pyArgs)
+	if err != nil {
+		log.Println(utilities.ErrTag, err)
+	}
+
+	return onDevices
 }
 
 func isNodeOnline(nodeid string, onlineDevices []utilities.Device) bool {
@@ -31,4 +44,13 @@ func isNodeOnline(nodeid string, onlineDevices []utilities.Device) bool {
 		}
 	}
 	return false
+}
+
+func forgeAndExec(venvName string, nodeid, command string) {
+	log.Printf("Triggered %s, on %s", command, nodeid)
+
+	pyArgs := strings.Fields(fmt.Sprintf("--run --nodeid %s --command", nodeid))
+	pyArgs = append(pyArgs, command)
+
+	wrapper.ExecTask(venvName, pyArgs)
 }
