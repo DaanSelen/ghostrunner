@@ -32,11 +32,12 @@ async def main():
             print(dumps(online_devices,indent=4))
         else:
             print(dumps(online_devices))
-    else:
-        print("No LO flag.")
 
     if args.run:
-        print("run command")
+        if not args.command or not args.nodeids:
+            return
+        
+        print(args.nodeids)
 
     await session.close()
 

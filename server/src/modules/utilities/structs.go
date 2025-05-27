@@ -55,6 +55,7 @@ type Device struct {
 }
 
 type PyOnlineDevices struct {
-	OnlineDevices []Device `json:"online_devices"`
-	TotalDevices  int      `json:"total_devices"`
+	OnlineDevices  []Device `json:"online_devices"`
+	OfflineDevices []Device `json:"offline_devices"`
+	TotalDevices   int      `json:"total_devices"`
 }

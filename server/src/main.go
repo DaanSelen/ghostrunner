@@ -7,7 +7,6 @@ import (
 	"ghostrunner-server/modules/restapi"
 	"ghostrunner-server/modules/timekeeper"
 	"ghostrunner-server/modules/utilities"
-	"ghostrunner-server/modules/wrapper"
 	"log"
 )
 
@@ -31,15 +30,5 @@ func main() {
 	log.Println(utilities.InfoTag, "Letting TimeKeeper take over...")
 	log.Println(utilities.InfoTag, fmt.Sprintf("Interval set at: %d seconds.", cfg.Interval))
 
-	onDevices, err := wrapper.PyListOnline(cfg.PyVenvName)
-	if err != nil {
-		log.Println(utilities.ErrTag, err)
-	}
-
-	for index, device := range onDevices.OnlineDevices {
-		log.Println(index, device)
-	}
-	log.Println(len(onDevices.OnlineDevices))
-
-	timekeeper.KeepTime(cfg.Interval)
+	timekeeper.KeepTime(cfg.Interval, cfg)
 }
