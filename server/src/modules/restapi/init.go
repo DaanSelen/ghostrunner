@@ -64,6 +64,7 @@ func createRouter(hmacKey []byte) *mux.Router {
 	r.HandleFunc("/task/create", createTaskHandler(hmacKey)).Methods("POST")
 	r.HandleFunc("/task/delete", deleteTaskHandler(hmacKey)).Methods("DELETE")
 	r.HandleFunc("/task/list", listTasksHandler(hmacKey)).Methods("GET")
+	r.HandleFunc("/task/flush", flushTaskListHandler(hmacKey)).Methods("DELETE")
 
 	return r
 }

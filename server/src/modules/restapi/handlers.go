@@ -242,6 +242,12 @@ func listTasksHandler(hmacKey []byte) http.HandlerFunc {
 	}
 }
 
+func flushTaskListHandler(hmacKey []byte) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("skibidi")
+	}
+}
+
 func createTask(taskName, command string, nodeids []string) error {
 	creationDate := time.Now().Format("02-01-2006 15:04:05")
 	creationStatus := constCreationStatus

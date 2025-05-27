@@ -10,15 +10,14 @@ func routine(cfg utilities.ConfigStruct, pyListArgs []string) {
 	d := listDevices(cfg, pyListArgs) // Retrieve the Online devices.
 	curTasks := database.RetrieveTasks()
 
-	for index, device := range d.OnlineDevices {
-		log.Println(index, device)
-	}
-
 	for index, task := range curTasks {
-		log.Println(index, task)
-		for _, nodeid := range task.Nodeids {
+		relevantNodeids := task.Nodeids
+
+		log.Printf("Processing Task %d", index)
+		for _, nodeid := range relevantNodeids {
 			if isNodeOnline(nodeid, d.OnlineDevices) {
-				log.Printf("NodeID %s is online\n", nodeid)
+				//result := wrapper.ExecCommand(nodeid, task.Command)
+				log.Printf("Node online: %s", nodeid)
 			}
 		}
 	}

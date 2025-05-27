@@ -92,16 +92,12 @@ func RetrieveTokenNames() []string {
 }
 
 func InsertTask(name, command string, nodeids []string, date, status string) error {
-	pNodeIds, err := json.Marshal(nodeids)
-	if err != nil {
-		return err
+	for _, singleNodeid := range nodeids {
+		_, err := db.Exec(declStat.CreateTask, name, command, string(singleNodeid), date, status)
+		if err != nil {
+			return fmt.Errorf("failed to create task: %w", err)
+		}
 	}
-
-	_, err = db.Exec(declStat.CreateTask, name, command, string(pNodeIds), date, status)
-	if err != nil {
-		return fmt.Errorf("failed to create task: %w", err)
-	}
-
 	return nil
 }
 

@@ -20,7 +20,6 @@ func PyListOnline(venvName string, pyArgs []string) (utilities.PyOnlineDevices, 
 	cmd := exec.Command(pyBin, runtimeArgs...)
 
 	rawData, err := cmd.CombinedOutput()
-	log.Println(string(rawData))
 	if err != nil {
 		cwd, _ := os.Getwd()
 		return utilities.PyOnlineDevices{}, fmt.Errorf("python execution failed, working directory: %s", cwd)
@@ -32,4 +31,8 @@ func PyListOnline(venvName string, pyArgs []string) (utilities.PyOnlineDevices, 
 	}
 
 	return data, nil
+}
+
+func ExecCommand(nodeid, command string) {
+	log.Printf("Triggered %s, on %s", command, nodeid)
 }

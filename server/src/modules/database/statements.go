@@ -24,11 +24,12 @@ var declStat = Statements{
 	);
 	CREATE TABLE IF NOT EXISTS tasks (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT UNIQUE NOT NULL,
+		name TEXT NOT NULL,
 		command TEXT NOT NULL,
-		nodeids TEXT NOT NULL,
+		nodeid TEXT NOT NULL,
 		creation TEXT NOT NULL,
-		status TEXT NOT NULL
+		status TEXT NOT NULL,
+		result TEXT DEFAULT NULL
 	);`,
 
 	AdminTokenCreate: `
@@ -49,10 +50,10 @@ var declStat = Statements{
 	SELECT name FROM tokens`,
 
 	CreateTask: `
-	INSERT INTO tasks (name, command, nodeids, creation, status)
+	INSERT INTO tasks (name, command, nodeid, creation, status)
 		VALUES (?, ?, ?, ?, ?);`,
 	DeleteTask: `
 	DELETE FROM tasks WHERE name = ?;`,
 	ListAllTasks: `
-	Select name, command, nodeids, creation, status from tasks;`,
+	Select name, command, nodeid, creation, status from tasks;`,
 }
