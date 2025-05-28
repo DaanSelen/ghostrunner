@@ -54,6 +54,7 @@ func RetrieveTokens() []string {
 	rows, err := db.Query(declStat.RetrieveTokens)
 	if err != nil {
 		log.Println(utilities.ErrTag, err)
+		return []string{}
 	}
 	defer rows.Close()
 
@@ -74,6 +75,7 @@ func RetrieveTokenNames() []string {
 	rows, err := db.Query(declStat.RetrieveTokenNames)
 	if err != nil {
 		log.Println(utilities.ErrTag, err)
+		return []string{}
 	}
 	defer rows.Close()
 
@@ -92,7 +94,7 @@ func RetrieveTokenNames() []string {
 
 func InsertTask(name, command string, nodeids []string, date string) error {
 	for _, singleNodeid := range nodeids {
-		_, err := db.Exec(declStat.CreateTask, name, command, string(singleNodeid), date)
+		_, err := db.Exec(declStat.CreateTask, name, command, singleNodeid, date)
 		if err != nil {
 			return fmt.Errorf("failed to create task: %w", err)
 		}
@@ -125,7 +127,7 @@ func RetrieveTasks() []utilities.InternalQTaskData {
 	rows, err := db.Query(declStat.ListAllTasks)
 	if err != nil {
 		log.Println("Query error:", err)
-		return nil
+		return []utilities.InternalQTaskData{}
 	}
 	defer rows.Close()
 

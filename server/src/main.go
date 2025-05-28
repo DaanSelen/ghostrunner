@@ -15,6 +15,7 @@ func main() {
 	cfgPtr := flag.String("conf", "./conf/ghostserver.conf", "Specify a config file location yourself. Relative to the program.")
 	cfg := utilities.ReadConf(*cfgPtr)
 
+	log.Println(utilities.InfoTag, "Loading Secrets...")
 	hmacKey, err := utilities.LoadHMACKey(cfg.TokenKeyFile)
 	if err != nil {
 		log.Println(utilities.ErrTag, err)

@@ -37,12 +37,12 @@ func PyListOnline(venvName string, pyArgs []string) (utilities.PyOnlineDevices, 
 	return data, nil
 }
 
-func ExecTask(venvName string, pyArgs []string) {
+func ExecTask(venvName string, pyArgs []string) string {
 	rawData, err := pyExec(venvName, pyArgs)
 	if err != nil {
 		cwd, _ := os.Getwd()
 		log.Println("FAILED,", err, "CWD:", cwd)
 	}
 
-	log.Println(string(rawData))
+	return string(rawData)
 }
